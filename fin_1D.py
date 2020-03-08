@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from celluloid import Camera
 np.set_printoptions(precision=2)
 
 L = 1.
@@ -45,19 +46,39 @@ def efficiency(x,forma_sup):
 
 	return effi, theta, forma_sup, forma_inf
 
-effi1, theta1, forma_sup1, forma_inf1 = efficiency(x,forma_sup)
+def gradient_descent(x,forma_gd):
+	fig = plt.figure(figsize = (9,4))
+	camera = Camera(fig)
+	for i in range(0,50):
+		for i in range(0,len(x)):
+			forma_try = np.copy(forma_gd)
+			forma_try[i] -= abs(np.random.rand())*0.01
+			effi1, theta1, forma_sup1, forma_inf1 = efficiency(x,forma_gd)
+			effi2, theta2, forma_sup2, forma_inf2 = efficiency(x,forma_try)
 
-plt.figure(figsize = (9,4))
-plt.subplot(121)
-plt.plot(x,theta1, c = 'c')
-plt.xlabel('$x (m)$')
-plt.ylabel(r'$\theta (^\circ C)$')
-plt.title('Dist. de Temperatura')
-plt.subplot(122)
-plt.plot(x,forma_sup1, c = 'b')
-plt.plot(x,forma_inf1, c = 'b')
-plt.xlabel('$x (m)$')
-plt.ylabel('$y (m)$')
-plt.title('$\eta$ = {:.3f}'.format(effi1))
-plt.subplots_adjust(wspace = 0.4, hspace = 0.4)
-plt.show()
+			if effi2 > effi1:
+				forma_gd = forma_try
+
+		effi, theta, forma_sup, forma_inf = efficiency(x,forma_gd)
+		plt.subplot(121)
+		plt.plot(x,theta, c = 'c')
+		plt.xlabel('$x (m)$')
+		plt.ylabel(r'$\theta (^\circ C)$')
+		plt.title('Dist. de Temperatura')
+		plt.subplot(122)
+		t = plt.plot(x,forma_sup, c = 'b')
+		plt.plot(x,forma_inf, c = 'b')
+		plt.xlabel('$x (m)$')
+		plt.ylabel('$y (m)$')
+		plt.title('Forma de la Aleta')
+		plt.legend(t, ['$\eta$ = {:.4g}'.format(effi)])
+		plt.subplots_adjust(wspace = 0.4, hspace = 0.4)
+		camera.snap()
+
+	animation = camera.animate()
+	plt.show()
+
+gradient_descent(x,forma_sup)
+
+
+
