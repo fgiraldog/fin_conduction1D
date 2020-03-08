@@ -14,7 +14,9 @@ theta_b = 50.
 theta_l = 5.
 
 x = np.linspace(0,L,20)
-perimetro = (2*(b_0-(b_0*x/L)))+(2*(b_1-(b_1*x/L)))+2*w
+forma_sup = b_0-(b_0*x/L)
+forma_inf = -b_1+(b_1*x/L)
+perimetro = (2*forma_sup)+(2*-forma_inf)+2*w
 area = ((b_0-(b_0*x/L))+(b_1-(b_1*x/L)))*w
 delta_x2 = (x[1]-x[0])**2
 
@@ -33,13 +35,26 @@ A[18,17] = 5/4.
 A[18,16] = -1/4.
 
 b = np.zeros(19)
-print(b.shape)
 b[0] = -theta_b*((area[1]/delta_x2)-(area[2]/(4*delta_x2))+(area[0]/(4*delta_x2)))
 theta = np.linalg.solve(A,b)
 theta = np.append(theta_b,theta)
 
-plt.figure()
-plt.plot(x,theta)
+q_real = np.trapz(perimetro*theta,x)*h
+q_max = np.trapz(perimetro,x)*h*theta_b
+effi = q_real/q_max
+
+
+plt.figure(figsize = (9,4))
+plt.subplot(121)
+plt.plot(x,theta, c = 'c')
 plt.xlabel('$x (m)$')
 plt.ylabel(r'$\theta (^\circ C)$')
+plt.title('Dist. de Temperatura')
+plt.subplot(122)
+plt.plot(x,forma_sup, c = 'b')
+plt.plot(x,forma_inf, c = 'b')
+plt.xlabel('$x (m)$')
+plt.ylabel('$y (m)$')
+plt.title('$\eta$ = {:.3f}'.format(effi))
+plt.subplots_adjust(wspace = 0.4, hspace = 0.4)
 plt.show()
