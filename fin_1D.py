@@ -21,7 +21,7 @@ def efficiency(x,forma_sup):
 	perimetro = (2*forma_sup)+(2*-forma_inf)+2*w
 	area = ((forma_sup)+(-forma_inf))*w
 
-	A = np.zeros((19,19))
+	A = np.zeros((len(x)-1,len(x)-1))
 
 	for i in range(0,np.shape(A)[0]-1):
 		for j in range(0,np.shape(A)[1]-1):
@@ -31,11 +31,11 @@ def efficiency(x,forma_sup):
 				A[i,j] = (area[i+1]/delta_x2)-(area[i]/(4.*delta_x2))+(area[i+2]/(4.*delta_x2))
 			if j==i-1:
 				A[i,j] = (area[i+1]/delta_x2)+(area[i]/(4.*delta_x2))-(area[i+2]/(4.*delta_x2))
-	A[18,18] = -1
-	A[18,17] = 5/4.
-	A[18,16] = -1/4.
+	A[-1,-1] = -1
+	A[-1,-2] = 5/4.
+	A[-1,-3] = -1/4.
 
-	b = np.zeros(19)
+	b = np.zeros(len(x)-1)
 	b[0] = -theta_b*((area[1]/delta_x2)-(area[2]/(4*delta_x2))+(area[0]/(4*delta_x2)))
 	theta = np.linalg.solve(A,b)
 	theta = np.append(theta_b,theta)
@@ -49,15 +49,23 @@ def efficiency(x,forma_sup):
 def gradient_descent(x,forma_gd):
 	fig = plt.figure(figsize = (9,4))
 	camera = Camera(fig)
-	for i in range(0,50):
-		for i in range(0,len(x)):
+	for i in range(0,100):
+		d_effi = []
+		for j in range(0,len(x)):
 			forma_try = np.copy(forma_gd)
-			forma_try[i] -= abs(np.random.rand())*0.01
+			delta_B = (np.random.normal(forma_try[j],0.2))*0.001
+			forma_try[j] += delta_B
 			effi1, theta1, forma_sup1, forma_inf1 = efficiency(x,forma_gd)
 			effi2, theta2, forma_sup2, forma_inf2 = efficiency(x,forma_try)
 
-			if effi2 > effi1:
-				forma_gd = forma_try
+			d_effi.append((effi2-effi1)/delta_B)
+
+		forma_gd += d_effi
+		for k in range(0,len(x)):
+			if forma_gd[k]>0.5:
+				forma_gd[k] = 0.5
+			if forma_gd[k]<0.0:
+				forma_gd[k] = 0.0
 
 		effi, theta, forma_sup, forma_inf = efficiency(x,forma_gd)
 		plt.subplot(121)
