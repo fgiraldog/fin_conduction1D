@@ -31,9 +31,9 @@ def efficiency(x,forma_sup):
 				A[i,j] = (area[i+1]/delta_x2)-(area[i]/(4.*delta_x2))+(area[i+2]/(4.*delta_x2))
 			if j==i-1:
 				A[i,j] = (area[i+1]/delta_x2)+(area[i]/(4.*delta_x2))-(area[i+2]/(4.*delta_x2))
-	A[-1,-1] = -1
-	A[-1,-2] = 5/4.
-	A[-1,-3] = -1/4.
+	A[-1,-1] = -4.
+	A[-1,-2] = 5.
+	A[-1,-3] = -1.
 
 	b = np.zeros(len(x)-1)
 	b[0] = -theta_b*((area[1]/delta_x2)-(area[2]/(4*delta_x2))+(area[0]/(4*delta_x2)))
