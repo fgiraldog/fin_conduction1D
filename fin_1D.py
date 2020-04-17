@@ -13,7 +13,7 @@ global L
 h = 0.2
 k = 1.
 w = 1.
-theta_b = 1.
+theta_b = 80.
 L = 1. 
 
 #Funcion para calcular eficiencia
@@ -24,33 +24,37 @@ def efficiency(x,forma_sup,forma_inf):
 	area = (forma_sup-forma_inf)*w
 
 	#Matriz asociada al problema
-	A = np.zeros((len(x)-1,len(x)-1))
+	A = np.zeros((len(x),len(x)))
 
-	#Aca se llena la matriz
-	for i in range(0,np.shape(A)[0]-1):
-		for j in range(0,np.shape(A)[1]-1):
-			if i==j: #Diagonal principal
-				A[i,j] = (-2*area[i+1]/delta_x2)-(h*perimetro[i+1]/k)
-			elif j==i+1: #Diagonal arriba de la principal
-				A[i,j] = (area[i+1]/delta_x2)-(area[i]/(4.*delta_x2))+(area[i+2]/(4.*delta_x2))
-			elif j==i-1: #Diagonal abajo de la principal
-				A[i,j] = (area[i+1]/delta_x2)+(area[i]/(4.*delta_x2))-(area[i+2]/(4.*delta_x2))
-
-	#Condiciones de frontera para el ultimo nodo
-	A[-1,-1] = -3.
-	A[-1,-2] = 4.
-	A[-1,-3] = -1.
+	#Condiciones de frontera para el primer nodo
+	A[0,0] = 1.
 
 	#Solucion al problema Ax = b donde x son las temperaturas
-	b = np.zeros(len(x)-1)
-	b[0] = -theta_b*((area[1]/delta_x2)-(area[2]/(4.*delta_x2))+(area[0]/(4.*delta_x2)))
+	b = np.zeros(len(x))
+	b[0] = theta_b
+
+	#Aca se llena la matriz
+	for i in range(1,np.shape(A)[0]-1):
+		#Diagonal principal
+		A[i,i] = -((2*area[i]/delta_x2) + (h*perimetro[i]/k))
+		#Diagonal arriba de la principal
+		A[i,i+1] = (area[i]/delta_x2) + ((area[i+1]-area[i-1])/(4.*delta_x2))
+		#Diagonal abajo de la principal
+		A[i,i-1] = (area[i]/delta_x2) - ((area[i+1]-area[i-1])/(4.*delta_x2))
+
+	#Condiciones de frontera para el ultimo nodo
+	A[-1,-1] = 3.
+	A[-1,-2] = -4.
+	A[-1,-3] = 1.
+
+	#Solucion al problema Ax = b dondep x son las temperaturas
 	theta = np.linalg.solve(A,b)
-	theta = np.append(theta_b,theta)
 
 	#Calculo de la eficiencia
-	q_real = np.trapz(perimetro*theta*h,x)
-	q_max = np.trapz(perimetro*h*theta_b,x)
-	effi = q_real/q_max
+	q_real = np.trapz(h*perimetro*theta,x)
+	q_max = np.trapz(h*perimetro*theta_b,x)
+
+	effi = float(q_real/q_max)
 
 	return effi, theta
 
@@ -96,7 +100,7 @@ def gradient_descent(x,forma_gd,forma_inf,file_name):
 				cond = False
 
 		#Toma de la foto para la animacion
-		if cond and effi>effi_max and i%5 == 0:
+		if cond and effi>effi_max and i%25 == 0:
 			effi_max = effi
 			plt.subplot(121)
 			plt.plot(x,theta, c = 'c')
@@ -115,6 +119,9 @@ def gradient_descent(x,forma_gd,forma_inf,file_name):
 			camera.snap()
 
 		i += 1
+
+		if i > 2000:
+			break
 	#Creacion de la animacion
 	animation = camera.animate()
 	animation.save('{}.gif'.format(file_name))
@@ -158,7 +165,7 @@ def gradient_descentpoly(x,a,forma_inf,file_name):
 			effi2, theta2 = efficiency(x,forma_try,forma_inf)
 			d_effi.append((effi2-effi1)/delta_B)
 
-		a += 0.005*np.array(d_effi)
+		a += 0.01*np.array(d_effi)
 		forma_gd = perfil_sup(x, a)
 
 		#Calculo de la eficiencia del perfil despues del paso
@@ -171,7 +178,7 @@ def gradient_descentpoly(x,a,forma_inf,file_name):
 				cond=False
 
         #Toma de la foto para la animacion
-		if cond == True and effi>effi_max and i%5 == 0:
+		if cond == True and effi>effi_max and i%25 == 0:
 			effi_max = effi
 			plt.subplot(121)
 			plt.plot(x,theta, c = 'c')
@@ -190,6 +197,9 @@ def gradient_descentpoly(x,a,forma_inf,file_name):
 			camera.snap()
 
 		i += 1
+
+		if i > 2000:
+			break
 	#Creacion de la animacion   
 	animation = camera.animate()
 	animation.save('{}.gif'.format(file_name))
@@ -198,8 +208,8 @@ def gradient_descentpoly(x,a,forma_inf,file_name):
 x = np.linspace(0,L,20)
 b_0 = 0.3
 b_1 = 0.3
-forma_supt = b_0 - b_0*x/L
-forma_inft = -b_1 + b_1*x/L
+forma_supt = b_0*(1-x)
+forma_inft = -b_1*(1-x)
 
 eff_1, theta_1 = efficiency(x,forma_supt,forma_inft)
 
@@ -223,4 +233,4 @@ a = np.array([b_0,0,0,0,0])
 
 #Aleta rectangular
 # gradient_descentpoly(x,a,forma_infr,'poly_rect')
-# gradient_descent(x,forma_supr,forma_infr, 'node_rect')
+gradient_descent(x,forma_supr,forma_infr, 'node_rect')
